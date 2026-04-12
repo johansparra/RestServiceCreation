@@ -45,4 +45,21 @@ El único marcador activo en `ServiceTemplate.xml` es:
 ## Cómo actuar
 - Usa `ServiceTemplate.xml` y `create-service.ps1` como referencia de estilo al generar código.
 - Si el usuario pide crear un servicio, genera el comando PowerShell con la ruta `.\src\scripts\create-service.ps1`.
+- Si el usuario pide recrear o sobreescribir un servicio que ya existe, agrega `-Force` al comando.
 - No incluyas código completo de servicios dentro de este archivo; genera archivos separados.
+
+## Ejemplo de petición y respuesta esperada
+
+**Usuario:** "Crea un servicio llamado `PagosService` con el stored procedure `SP_PAGOS`"
+
+**Copilot debe generar:**
+```powershell
+.\src\scripts\create-service.ps1 -ServiceName PagosService -StoredProcedure SP_PAGOS
+```
+
+**Usuario:** "Vuelve a crear `PagosService`" o "sobreescribe `PagosService`"
+
+**Copilot debe generar:**
+```powershell
+.\src\scripts\create-service.ps1 -ServiceName PagosService -StoredProcedure SP_PAGOS -Force
+```

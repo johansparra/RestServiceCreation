@@ -2,10 +2,7 @@
 
 ## 1. Preparar el entorno
 
-Abre PowerShell en la raíz del proyecto:
-```
-d:\Claude\Copilot\RestServiceCreation
-```
+Abre PowerShell en la raíz del repositorio (donde está la carpeta `src/` y `ServiceTemplate/`).
 
 Verifica que existan:
 - `ServiceTemplate\ServiceTemplate.xml`
