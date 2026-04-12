@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ServiceConfig>
+    <ServiceVersion>1.0</ServiceVersion>\
+    <Service backend='SQL'/>
+    <SQL>
+        <DEV>
+            <country name="DO" version="001">
+                <schema>SA01</schema>
+                <stored_procedure>{{StoredProcedure}}</stored_procedure>
+            </country>
+             <country name="TT" version="001">
+                <schema>SA02</schema>
+                <stored_procedure>{{StoredProcedure}}</stored_procedure>
+            </country>
+        </DEV>
+        <FQ0Q1>
+            <country name="DO" version="001">
+                <schema>SAC21</schema>
+                <stored_procedure>{{StoredProcedure}}</stored_procedure>
+            </country>
+             <country name="TT" version="001">
+                <schema>SAC22</schema>
+                <stored_procedure>{{StoredProcedure}}</stored_procedure>
+            </country>
+        </FQ0Q1>
+    </SQL>
+</ServiceConfig>
