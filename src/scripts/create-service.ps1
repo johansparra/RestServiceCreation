@@ -1,0 +1,108 @@
+<#
+.SYNOPSIS
+Copia una plantilla de servicio DataPower y reemplaza variables dentro de los archivos.
+
+.DESCRIPTION
+Este script duplica la carpeta ServiceTemplate en una nueva carpeta de servicio.
+También reemplaza valores de plantilla en archivos de texto con variables de entrada.
+#>
+
+[CmdletBinding()]
+# [CmdletBinding()] habilita características avanzadas de script como soporte de parámetros, help y manejo unificado de errores.
+param(
+    [Parameter(Mandatory=$false)]
+    [string]$TemplatePath = ".\ServiceTemplate",
+
+    [Parameter(Mandatory=$false)]
+    [string]$DestinationRoot = ".\Services",
+
+    [Parameter(Mandatory=$true)]
+    [string]$ServiceName,
+
+    [Parameter(Mandatory=$false)]
+    [string]$StoredProcedure = 'SP_TEMPLATE',
+
+    [Parameter(Mandatory=$false)]
+    [switch]$Force
+)
+
+function Write-Status {
+    param([string]$Message)
+    Write-Host "[create-service] $Message"
+}
+
+# Detiene el script ante cualquier error, en lugar de continuar silenciosamente.
+$ErrorActionPreference = 'Stop'
+
+# ── 1. Resolución de rutas ────────────────────────────────────────────────────
+# Convierte las rutas relativas en rutas absolutas para evitar errores al
+# ejecutar el script desde distintos directorios.
+# Si $DestinationRoot no existe aún (ej. primera ejecución), lo crea.
+$TemplatePath = Resolve-Path -Path $TemplatePath -ErrorAction Stop
+$DestinationRoot = Resolve-Path -Path $DestinationRoot -ErrorAction SilentlyContinue
+if (-not $DestinationRoot) {
+    $DestinationRoot = Join-Path -Path (Get-Location) -ChildPath '.\Services'
+    New-Item -Path $DestinationRoot -ItemType Directory -Force | Out-Null
+}
+
+# Ruta final donde quedará el nuevo servicio: Services\<ServiceName>
+$DestinationPath = Join-Path -Path $DestinationRoot -ChildPath $ServiceName
+
+# ── 2. Validación de destino ──────────────────────────────────────────────────
+# Si la carpeta del servicio ya existe, solo se permite continuar con -Force.
+# Sin -Force el script se detiene para evitar sobreescribir trabajo existente.
+if (Test-Path $DestinationPath) {
+    if ($Force) {
+        Write-Status "La ruta ya existía. Eliminando contenido existente: $DestinationPath"
+        Remove-Item -Path $DestinationPath -Recurse -Force
+    } else {
+        Throw "La ruta ya existe: $DestinationPath. Usa -Force para sobrescribir."
+    }
+}
+
+# ── 3. Copia de la plantilla ──────────────────────────────────────────────────
+# Duplica toda la carpeta ServiceTemplate en la ruta de destino.
+# -Recurse copia subdirectorios; -Force sobreescribe si hay conflictos de atributos.
+Write-Status "Copiando plantilla desde '$TemplatePath' a '$DestinationPath'..."
+Copy-Item -Path $TemplatePath -Destination $DestinationPath -Recurse -Force
+
+# ── 4. Reemplazo de marcadores ────────────────────────────────────────────────
+# Define los marcadores que serán reemplazados en los archivos de la plantilla.
+# Para agregar uno nuevo: añadir una entrada '{{NuevoMarcador}}' = $NuevoParametro.
+$placeholders = @{
+    '{{StoredProcedure}}' = $StoredProcedure
+}
+
+# Recorre todos los archivos de texto del servicio recién copiado y sustituye
+# cada marcador por su valor real. Solo procesa extensiones conocidas para
+# evitar corromper binarios u otros archivos no relacionados.
+Write-Status "Reemplazando variables dentro de los archivos..."
+Get-ChildItem -Path $DestinationPath -Recurse -File | Where-Object {
+    @('.xml', '.json', '.txt', '.ps1', '.config', '.md') -contains $_.Extension.ToLower()
+} | ForEach-Object {
+    $content = Get-Content -Path $_.FullName -Raw -ErrorAction Stop
+    foreach ($key in $placeholders.Keys) {
+        $value = $placeholders[$key]
+        $content = $content -replace [regex]::Escape($key), [regex]::Escape($value)
+    }
+    Set-Content -Path $_.FullName -Value $content -Encoding UTF8
+}
+
+# ── 5. Generación de service-definition.json ─────────────────────────────────
+# Crea un archivo JSON dentro del servicio con los parámetros usados durante
+# la creación. Sirve como registro auditable de qué valores se aplicaron.
+$definition = [ordered]@{
+    ServiceName      = $ServiceName
+    StoredProcedure  = $StoredProcedure
+    CreatedAt        = (Get-Date).ToString('u')
+    SourceTemplate   = $TemplatePath.Path
+}
+
+$definitionPath = Join-Path -Path $DestinationPath -ChildPath 'service-definition.json'
+$definition | ConvertTo-Json -Depth 5 | Set-Content -Path $definitionPath -Encoding UTF8
+
+Write-Status "Servicio creado correctamente en: $DestinationPath"
+Write-Status "Archivo de definición guardado en: $definitionPath"
+
+# Devuelve la ruta del servicio creado para que pueda usarse en pipelines o scripts externos.
+Write-Output $DestinationPath

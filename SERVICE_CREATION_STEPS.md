@@ -1,74 +1,41 @@
-# Creación de servicio DataPower
+# Pasos para crear un servicio DataPower
 
-Este archivo describe los pasos para crear un servicio usando el script `create-service.ps1`.
+## 1. Preparar el entorno
 
-## 1. Preparar el proyecto
-
-1. Abre PowerShell en la raíz del proyecto:
-   - `d:\Claude\Copilot\RestServiceCreation`
-2. Asegúrate de que existe la carpeta `ServiceTemplate` y el script `create-service.ps1`.
-3. El archivo de plantilla es:
-   - `ServiceTemplate\ServiceTemplate.xml`
-
-## 2. Comando para crear el servicio
-
-Usa este comando:
-
-```powershell
-.\create-service.ps1 -ServiceName MiServicio -Environment DEV -StoredProcedure SP_TEMPLATE
+Abre PowerShell en la raíz del proyecto:
+```
+d:\Claude\Copilot\RestServiceCreation
 ```
 
-Si quieres sobrescribir un servicio existente:
+Verifica que existan:
+- `ServiceTemplate\ServiceTemplate.xml`
+- `src\scripts\create-service.ps1`
+
+## 2. Ejecutar el script
 
 ```powershell
-.\create-service.ps1 -ServiceName MiServicio -Environment DEV -StoredProcedure SP_TEMPLATE -Force
+.\src\scripts\create-service.ps1 -ServiceName MiServicio -StoredProcedure SP_TEMPLATE
 ```
 
-## 3. Ejecución manual (sin IA)
-
-1. Abre PowerShell en la raíz del proyecto.
-2. Copia y pega el comando anterior.
-3. Presiona Enter.
-
-Resultado:
-- Se crea la carpeta `Services\MiServicio`.
-- Se copia la plantilla de `ServiceTemplate`.
-- Se reemplaza `{{StoredProcedure}}` dentro del archivo XML.
-- Se crea `service-definition.json` con los parámetros usados.
-
-## 4. Ejecución con IA
-
-Si quieres que la IA ejecute el comando por ti:
-
-1. Pide a la IA lo siguiente:
-   - "Crea el servicio `MiServicio` en `DEV` con `SP_TEMPLATE` y ejecútalo." 
-2. La IA usaría internamente el mismo comando:
+Para sobrescribir un servicio existente:
 
 ```powershell
-.\create-service.ps1 -ServiceName MiServicio -Environment DEV -StoredProcedure SP_TEMPLATE
+.\src\scripts\create-service.ps1 -ServiceName MiServicio -StoredProcedure SP_TEMPLATE -Force
 ```
 
-### Nota importante
+## 3. Resultado esperado
 
-- No existe un comando diferente para la IA.
-- El script es el mismo.
-- La diferencia es que la IA puede ejecutar el comando por ti si está autorizada a usar el terminal.
+| Archivo generado | Descripción |
+|---|---|
+| `Services\MiServicio\ServiceTemplate.xml` | Plantilla con `{{StoredProcedure}}` reemplazado |
+| `Services\MiServicio\service-definition.json` | Registro con los parámetros usados |
 
-## 5. Qué se debe pasar en el plan
+## 4. Parámetros del script
 
-Para que yo pueda ejecutar el servicio desde un plan, pásame al menos estos valores:
-
-- `ServiceName`: nombre del servicio nuevo.
-- `Environment`: por ejemplo `DEV` o `FQ0Q1`.
-- `StoredProcedure`: nombre del procedimiento almacenado.
-
-Ejemplo de plan:
-
-> Crea el servicio `MiServicio` con entorno `DEV` y stored procedure `SP_TEMPLATE`. Ejecuta el script en la carpeta del proyecto.
-
-## 6. Resumen
-
-| Opción | Qué hace | Comando |
-|--------|----------|---------|
-| Manual | Tú ejecutas el script en PowerShell | `.\create-service.ps1 -ServiceName MiServicio -Environment DEV -StoredProcedure SP_TEMPLATE` |
-| IA | La IA ejecuta el mismo script por ti si puede usar terminal | `.\create-service.ps1 -ServiceName MiServicio -Environment DEV -StoredProcedure SP_TEMPLATE` |
+| Parámetro | Obligatorio | Descripción |
+|---|---|---|
+| `-ServiceName` | Sí | Nombre del servicio a crear |
+| `-StoredProcedure` | No (default: `SP_TEMPLATE`) | Nombre del stored procedure SQL |
+| `-Force` | No | Sobrescribe el servicio si ya existe |
+| `-TemplatePath` | No (default: `.\ServiceTemplate`) | Ruta a la plantilla fuente |
+| `-DestinationRoot` | No (default: `.\Services`) | Carpeta destino de los servicios |

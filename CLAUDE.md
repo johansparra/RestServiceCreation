@@ -4,23 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Propósito
 
-Este repositorio genera la estructura de servicios REST para IBM DataPower. El artefacto principal es el script PowerShell (`create-service.ps1`) que copia `ServiceTemplate/` en un nuevo directorio `Services/<ServiceName>/` y reemplaza los marcadores de plantilla.
+Este repositorio genera la estructura de servicios REST para IBM DataPower. El script principal es `src/scripts/create-service.ps1`, que copia `ServiceTemplate/` en `Services/<ServiceName>/` y reemplaza los marcadores de plantilla.
 
 ## Crear un servicio
 
 Ejecutar desde la raíz del repositorio (requiere PowerShell):
 
 ```powershell
-.\create-service.ps1 -ServiceName MiServicio -Environment DEV -StoredProcedure SP_MI_PROC
+.\src\scripts\create-service.ps1 -ServiceName MiServicio -StoredProcedure SP_MI_PROC
 ```
 
 Para sobrescribir un servicio existente:
 
 ```powershell
-.\create-service.ps1 -ServiceName MiServicio -Environment DEV -StoredProcedure SP_MI_PROC -Force
+.\src\scripts\create-service.ps1 -ServiceName MiServicio -StoredProcedure SP_MI_PROC -Force
 ```
-
-Valores válidos para `-Environment`: `DEV`, `FQ0Q1`, `PROD`.
 
 ## Qué hace el script
 
@@ -30,10 +28,6 @@ Valores válidos para `-Environment`: `DEV`, `FQ0Q1`, `PROD`.
 
 ## Estructura de la plantilla
 
-`ServiceTemplate/ServiceTemplate.xml` define la configuración del servicio DataPower. Contiene secciones por entorno (`DEV`, `FQ0Q1`) con mapeos de país/esquema, y usa `{{StoredProcedure}}` como único marcador actual.
+`ServiceTemplate/ServiceTemplate.xml` define la configuración del servicio DataPower con secciones por entorno (`DEV`, `FQ0Q1`) y mapeos de país/esquema. Usa `{{StoredProcedure}}` como único marcador.
 
-Para agregar un nuevo marcador, añadirlo tanto en `ServiceTemplate.xml` como en el hashtable `$placeholders` dentro de `create-service.ps1`.
-
-## Agregar un nuevo entorno
-
-Agregar una nueva entrada al `ValidateSet` del parámetro `-Environment` en `create-service.ps1` y un bloque XML correspondiente en `ServiceTemplate/ServiceTemplate.xml`.
+Para agregar un nuevo marcador: añadirlo en `ServiceTemplate.xml` con la sintaxis `{{NuevoMarcador}}` y registrarlo en el hashtable `$placeholders` dentro de `src/scripts/create-service.ps1`.
